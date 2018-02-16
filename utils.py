@@ -93,7 +93,7 @@ def collect_motion(subjects_sessions, fmriprep_dir, full_out_dir, n_cpus):
     out_file = os.path.join(full_out_dir, "group_motion.tsv")
     df.to_csv(out_file, sep="\t", index=False)
     print("Writing to {}".format(out_file))
-    
+
     for m in ["FD_mean", "FD_max"]:
         sns.distplot(df[m])
         plt.savefig(os.path.join(full_out_dir, m + "_hist.pdf"))
