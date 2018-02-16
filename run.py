@@ -13,7 +13,7 @@ parser.add_argument('output_dir', help='The directory where the output files wil
                                        'created')
 parser.add_argument('analysis_level', help='''Level of the analysis that will be performed. 
                                            *"participant_sbc_motion_cc": produces maps with seedbased correlation to 
-                                               test confound regression with FD and CompCor regressors
+                                               test confound regression with FD + motion and CompCor regressors
                                            *"group_collect_motion": aggregates mean and max FD and creates 
                                            distribution plots'''
                     , choices=['participant_sbc_motion_cc', 'group_collect_motion'])

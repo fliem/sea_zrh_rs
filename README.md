@@ -20,7 +20,7 @@ The tool has several analysis levels
 
 * **participant_sbc_motion_cc**:
 produces maps with seedbased correlation to test confound regression
-with FD and CompCor regressors
+with FD + motion and CompCor regressors
 * **group_collect_motion**:
 aggregates mean and max FD and creates distribution plots
 
@@ -60,7 +60,7 @@ specify `--participant_label s01 s02`
                             Level of the analysis that will be performed.
                             *"participant_sbc_motion_cc": produces maps with
                             seedbased correlation to test confound regression with
-                            FD and CompCor regressors *"group_collect_motion":
+                            FD + motion and CompCor regressors *"group_collect_motion":
                             aggregates mean and max FD and creates distribution
                             plots
 
