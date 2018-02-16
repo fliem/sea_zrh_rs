@@ -52,7 +52,7 @@ def get_subject_sessions(fmriprep_dir, participant_label, raise_if_empty=True):
     return subjects, subjects_sessions
 
 
-def check_and_return_str(search_str):
+def check_and_return_path(search_str):
     l = glob(search_str)
     if len(l) != 1:
         raise Exception("glob found more or less than one file: {}. {}".format(search_str, l))
@@ -62,15 +62,19 @@ def check_and_return_str(search_str):
 
 def get_files(fmriprep_dir, subject, session):
     subject_dir = os.path.join(fmriprep_dir, "sub-" + subject)
-    session_dir = os.path.join(subject_dir, "ses-" + session, "func")
+    session_dir = os.path.join(subject_dir, "ses-" + session)
 
-    confounds_file = check_and_return_str(os.path.join(session_dir, "sub-*_task-rest_run-1_bold_confounds.tsv"))
-    brainmask_file = check_and_return_str(
-        os.path.join(session_dir, "sub-*_task-rest_run-1_bold_space-MNI152NLin2009cAsym_brainmask.nii.gz"))
-    rs_file = check_and_return_str(
-        os.path.join(session_dir, "sub-*_task-rest_run-1_bold_space-MNI152NLin2009cAsym_preproc.nii.gz"))
-    anat_file = check_and_return_str(
-        os.path.join(subject_dir, "anat", "sub-*_T1w_space-MNI152NLin2009cAsym_preproc.nii.gz"))
+    confounds_file = check_and_return_path(os.path.join(session_dir, "func", "sub-*_task-rest_run-1_bold_confounds.tsv"))
+    brainmask_file = check_and_return_path(
+        os.path.join(session_dir, "func", "sub-*_task-rest_run-1_bold_space-MNI152NLin2009cAsym_brainmask.nii.gz"))
+    rs_file = check_and_return_path(
+        os.path.join(session_dir, "func", "sub-*_task-rest_run-1_bold_space-MNI152NLin2009cAsym_preproc.nii.gz"))
+    try:
+        anat_file = check_and_return_path(
+            os.path.join(subject_dir, "anat", "sub-*_T1w_space-MNI152NLin2009cAsym_preproc.nii.gz"))
+    except: # might be a case with only 1 session, there the anat files are under sub-xx/ses-xx/anat/...
+        anat_file = check_and_return_path(
+            os.path.join(session_dir, "anat", "sub-*_T1w_space-MNI152NLin2009cAsym_preproc.nii.gz"))
     return confounds_file, brainmask_file, rs_file, anat_file
 
 
