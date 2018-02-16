@@ -11,7 +11,7 @@ Docker container is [here](https://hub.docker.com/r/fliem/sea_zrh_rs/builds/)
 ### The basic command:
 
     docker run --rm -ti \
-    fliem/sea_zrh_rs:dev1 \
+    fliem/sea_zrh_rs:dev2 \
     fmriprep_dir output_dir analysis_level
 
 
@@ -32,7 +32,7 @@ we want so save post-processing output to `/project/rs_postprocessing`.
     docker run --rm -ti \
     -v /project/fmriprep:/data/in \
     -v /project/rs_postprocessing:/data/out \
-    fliem/sea_zrh_rs:dev1 \
+    fliem/sea_zrh_rs:dev2 \
     /data/in /data/out participant_sbc_motion_cc \
     --TR 2 --n_cpus 4
 

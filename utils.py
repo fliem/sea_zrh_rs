@@ -38,6 +38,10 @@ def get_subject_sessions(fmriprep_dir, participant_label, raise_if_empty=True):
     subjects_sessions = list(map(get_subject_sessions_one_sub, subjects))
     subjects_sessions = list(itertools.chain.from_iterable(subjects_sessions))
 
+    # filter out sessions that only have anat, but no func:
+    subjects_sessions = list(filter(lambda s: os.path.isdir(os.path.join(fmriprep_dir, "sub-" + s[0], "ses-" + s[1],
+                                                                         "func")), subjects_sessions))
+
     print(subjects, subjects_sessions)
     if raise_if_empty:
         if not subjects:
