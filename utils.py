@@ -64,7 +64,8 @@ def get_files(fmriprep_dir, subject, session):
     subject_dir = os.path.join(fmriprep_dir, "sub-" + subject)
     session_dir = os.path.join(subject_dir, "ses-" + session)
 
-    confounds_file = check_and_return_path(os.path.join(session_dir, "func", "sub-*_task-rest_run-1_bold_confounds.tsv"))
+    confounds_file = check_and_return_path(
+        os.path.join(session_dir, "func", "sub-*_task-rest_run-1_bold_confounds.tsv"))
     brainmask_file = check_and_return_path(
         os.path.join(session_dir, "func", "sub-*_task-rest_run-1_bold_space-MNI152NLin2009cAsym_brainmask.nii.gz"))
     rs_file = check_and_return_path(
@@ -72,18 +73,18 @@ def get_files(fmriprep_dir, subject, session):
     try:
         anat_file = check_and_return_path(
             os.path.join(subject_dir, "anat", "sub-*_T1w_space-MNI152NLin2009cAsym_preproc.nii.gz"))
-    except: # might be a case with only 1 session, there the anat files are under sub-xx/ses-xx/anat/...
+    except:  # might be a case with only 1 session, there the anat files are under sub-xx/ses-xx/anat/...
         anat_file = check_and_return_path(
             os.path.join(session_dir, "anat", "sub-*_T1w_space-MNI152NLin2009cAsym_preproc.nii.gz"))
     return confounds_file, brainmask_file, rs_file, anat_file
 
 
 def get_motion_one_subject(subject, session, fmriprep_dir):
-    # returns data frame with FD_mean    FD_max   subject session
+    # returns data frame with FD_mean, FD_median, FD_max, subject, session
     confounds_file, brainmask_file, rs_file, anat_file = get_files(fmriprep_dir, subject, session)
     df = pd.read_csv(confounds_file, sep="\t")
-    agg = df[['FramewiseDisplacement']].agg(["mean", "max"])
-    agg.rename({"mean": "FD_mean", "max": "FD_max"}, inplace=True)
+    agg = df[['FramewiseDisplacement']].agg(["mean", "median", "max"])
+    agg.rename({"mean": "FD_mean", "median": "FD_median", "max": "FD_max"}, inplace=True)
     agg = agg.T
     agg["subject"] = subject
     agg["session"] = session
@@ -96,13 +97,13 @@ def collect_motion(subjects_sessions, fmriprep_dir, full_out_dir, n_cpus):
         delayed(get_motion_one_subject)(*suse, fmriprep_dir) for suse in subjects_sessions)
 
     df = pd.concat(dfs)
-    df = df[['subject', 'session', 'FD_mean', 'FD_max']]
+    df = df[['subject', 'session', 'FD_mean', 'FD_median', 'FD_max']]
     df.sort_values(by=["subject", "session"], inplace=True)
     out_file = os.path.join(full_out_dir, "group_motion.tsv")
     df.to_csv(out_file, sep="\t", index=False)
     print("Writing to {}".format(out_file))
 
-    for m in ["FD_mean", "FD_max"]:
+    for m in ["FD_mean", "FD_median","FD_max"]:
         sns.distplot(df[m])
         plt.savefig(os.path.join(full_out_dir, m + "_hist.pdf"))
         plt.close()
