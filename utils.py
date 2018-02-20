@@ -92,7 +92,21 @@ def get_motion_one_subject(subject, session, fmriprep_dir):
     return agg
 
 
+def get_motion_ts_one_subject(subject, session, fmriprep_dir):
+    # returns data frame with FD time series
+    confounds_file, brainmask_file, rs_file, anat_file = get_files(fmriprep_dir, subject, session)
+    df = pd.read_csv(confounds_file, sep="\t")
+
+    frames = df[['FramewiseDisplacement']].copy()
+    frames["subject"] = subject
+    frames["session"] = session
+    frames.reset_index(inplace=True)
+    frames.rename(columns={"index": "tr"}, inplace=True)
+    return frames
+
+
 def collect_motion(subjects_sessions, fmriprep_dir, full_out_dir, n_cpus):
+    # aggreagate FD
     dfs = Parallel(n_jobs=n_cpus)(
         delayed(get_motion_one_subject)(*suse, fmriprep_dir) for suse in subjects_sessions)
 
@@ -103,10 +117,20 @@ def collect_motion(subjects_sessions, fmriprep_dir, full_out_dir, n_cpus):
     df.to_csv(out_file, sep="\t", index=False)
     print("Writing to {}".format(out_file))
 
-    for m in ["FD_mean", "FD_median","FD_max"]:
+    # plots
+    for m in ["FD_mean", "FD_median", "FD_max"]:
         sns.distplot(df[m])
         plt.savefig(os.path.join(full_out_dir, m + "_hist.pdf"))
         plt.close()
         sns.boxplot(y=df[m])
         plt.savefig(os.path.join(full_out_dir, m + "_box.pdf"))
         plt.close()
+
+    # export FD time series
+    dfs = Parallel(n_jobs=n_cpus)(
+        delayed(get_motion_ts_one_subject)(*suse, fmriprep_dir) for suse in subjects_sessions)
+    df = pd.concat(dfs)
+    df.sort_values(by=["subject", "session"], inplace=True)
+    out_file = os.path.join(full_out_dir, "group_motion_time_series.tsv")
+    df.to_csv(out_file, sep="\t", index=False)
+    print("Writing time series to {}".format(out_file))
