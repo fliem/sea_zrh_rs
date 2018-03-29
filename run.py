@@ -3,7 +3,8 @@ import argparse
 import os
 from joblib import Parallel, delayed
 from utils import get_subject_sessions, collect_motion
-from connectivity import sbc_one_subject
+from sbc import sbc_one_session, sbc_group
+from glob import glob
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                                  description='SEA ZRH RS analysis code')
@@ -12,11 +13,11 @@ parser.add_argument('output_dir', help='The directory where the output files wil
                                        'Can be the same base dir for all analysis levels, as subdirectories are '
                                        'created')
 parser.add_argument('analysis_level', help='''Level of the analysis that will be performed. 
-                                           *"participant_sbc_motion_cc": produces maps with seedbased correlation to 
-                                               test confound regression with FD + motion and CompCor regressors
+                                           *"participant_1_sbc_pcc": produces maps with seedbased correlation
+                                           *"group_1_sbc_pcc": mean sbc maps
                                            *"group_collect_motion": aggregates mean and max FD and creates 
                                            distribution plots'''
-                    , choices=['participant_sbc_motion_cc', 'group_collect_motion'])
+                    , choices=['participant_1_sbc_pcc', 'group_1_sbc_pcc', 'group_collect_motion'])
 
 parser.add_argument('--participant_label',
                     help='The label of the participant that should be analyzed. The label '
@@ -32,24 +33,32 @@ parser.add_argument('--TR', help='TR of your data in seconds.', type=float)
 
 args = parser.parse_args()
 
+os.makedirs(args.output_dir, exist_ok=True)
 os.chdir(args.output_dir)
 
 subjects, subjects_sessions = get_subject_sessions(args.fmriprep_dir, args.participant_label)
 print("Processing {} subjects and a total of {} sessions".format(len(subjects), len(subjects_sessions)))
 
-if args.analysis_level == "participant_sbc_motion_cc":
+
+
+
+
+if args.analysis_level == "participant_1_sbc_pcc":
 
     if not args.TR:
         raise Exception("TR required for this step. Stopping")
 
-    full_out_dir = os.path.join(args.output_dir, "participant_1_sbc__motion_cc")
-    os.makedirs(full_out_dir, exist_ok=True)
+    output_dir = os.path.join(args.output_dir, "sbc", "participant")
+    os.makedirs(output_dir, exist_ok=True)
 
-    regressors = ['FramewiseDisplacement', 'aCompCor01', 'aCompCor02', 'aCompCor03', 'aCompCor04', 'aCompCor05', 'X',
-                  'Y', 'Z', 'RotX', 'RotY', 'RotZ']
     _ = Parallel(n_jobs=args.n_cpus)(
-        delayed(sbc_one_subject)(*suse, args.fmriprep_dir, full_out_dir, args.TR, regressors) for suse in
+        delayed(sbc_one_session)(*suse, args.fmriprep_dir, output_dir, args.TR) for suse in
         subjects_sessions)
+
+elif args.analysis_level == "group_1_sbc_pcc":
+    input_dir = os.path.join(args.output_dir, "sbc", "participant")
+    output_dir = os.path.join(args.output_dir, "sbc", "group")
+    sbc_group(input_dir, output_dir)
 
 elif args.analysis_level == "group_collect_motion":
     full_out_dir = os.path.join(args.output_dir, "group_1_motion")
