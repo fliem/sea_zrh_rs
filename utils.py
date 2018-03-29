@@ -134,3 +134,31 @@ def collect_motion(subjects_sessions, fmriprep_dir, full_out_dir, n_cpus):
     out_file = os.path.join(full_out_dir, "group_motion_time_series.tsv")
     df.to_csv(out_file, sep="\t", index=False)
     print("Writing time series to {}".format(out_file))
+
+
+
+def get_36P_confounds(confounds_file):
+    """
+    takes a fmriprep confounds file and creates data frame with Satterthwaite's 36P confound regressors
+
+    Satterthwaite, T. D., Elliott, M. A., Gerraty, R. T., Ruparel, K., Loughead, J., Calkins, M. E., et al. (2013).
+    An improved framework for confound regression and filtering for control of motion artifact in the preprocessing
+    of resting-state functional connectivity data. NeuroImage, 64, 240–256.
+    http://doi.org/10.1016/j.neuroimage.2012.08.052
+    """
+    df = pd.read_csv(confounds_file, sep="\t")
+
+    p9 = df[['CSF', 'WhiteMatter', 'GlobalSignal', 'X', 'Y', 'Z', 'RotX', 'RotY', 'RotZ']]
+    p9_der = p9.diff().fillna(0)
+    p9_der.columns = [c + "_der" for c in p9_der.columns]
+    p18 = pd.concat((p9, p9_der), axis=1)
+    p18_2 = p18 ** 2
+    p18_2.columns = [c + "_2" for c in p18_2.columns]
+    p36 = pd.concat((p18, p18_2), axis=1)
+    return p36
+
+
+def test_36p():
+    confounds_file = os.path.join("test_data/sub-1_ses-1_task-rest_run-1_bold_confounds.tsv")
+    confounds = get_36P_confounds(confounds_file)
+    assert confounds.shape == (225, 36), "Shape of 36P df is wrong {}".format(confounds.shape)
