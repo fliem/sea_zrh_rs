@@ -1,8 +1,11 @@
 FROM continuumio/miniconda3:latest
-RUN conda config --add channels conda-forge && \
-    conda install -y pandas joblib nilearn
+#RUN conda config --add channels conda-forge && \
+RUN conda install -y pandas
+RUN conda install -y joblib
 RUN conda install -y seaborn
 RUN conda install -y xlrd
+RUN conda install scikit-learn
+RUN pip install nilearn
 
 RUN apt-get update && apt-get install unzip
 RUN mkdir -p /parcs && cd /parcs && \
