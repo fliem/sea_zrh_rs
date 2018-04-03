@@ -17,6 +17,7 @@ def _get_roi_info(parc):
         df_labels["roi_labels"] = df_labels.roi_labels.apply(bytes.decode)
         roi_names = df_labels["roi_labels"].values
         roi_type = "maps"
+
     elif parc == "gordon":
         # fixme
         gordon_dir = "/parcs/Gordon/Parcels"
@@ -24,6 +25,19 @@ def _get_roi_info(parc):
         labs_df = pd.read_excel(os.path.join(gordon_dir, "Parcels.xlsx"))
         roi_names = labs_df.ParcelID.values
         roi_type = "labels"
+
+    elif parc == "basc197":
+        atlas = datasets.fetch_atlas_basc_multiscale_2015(version='sym')
+        roi_file = atlas['scale197']
+        roi_names = np.arange(1, 198).astype(int)
+        roi_type = "labels"
+
+    elif parc == "basc444":
+        atlas = datasets.fetch_atlas_basc_multiscale_2015(version='sym')
+        roi_file = atlas['scale444']
+        roi_names = np.arange(1, 445).astype(int)
+        roi_type = "labels"
+
     else:
         raise Exception("Parcellation not known {}".format(parc))
     return roi_file, roi_names, roi_type
