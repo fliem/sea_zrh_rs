@@ -14,7 +14,8 @@ def _get_roi_info(parc):
         atlas = datasets.fetch_atlas_msdl()
         roi_file = atlas['maps']
         df_labels = pd.DataFrame({"roi_labels": atlas['labels']})
-        df_labels["roi_labels"] = df_labels.roi_labels.apply(bytes.decode)
+        if isinstance(df_labels["roi_labels"][0], bytes):
+            df_labels["roi_labels"] = df_labels.roi_labels.apply(bytes.decode)
         roi_names = df_labels["roi_labels"].values
         roi_type = "maps"
 
