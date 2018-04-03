@@ -6,16 +6,15 @@ import matplotlib
 matplotlib.use('Agg')
 
 import pandas as pd
-import seaborn as sns
-from joblib import Parallel, delayed
-from matplotlib import pyplot as plt
 
 
-def get_subject_sessions(fmriprep_dir, participant_label, raise_if_empty=True):
+def get_subject_sessions(input_dir, participant_label, raise_if_empty=True, fmriprep_dir=True):
     """
     returns a list of subjects and a list of subject, session tuples
+    * input_dir can be an fmriprep_dir; set fmriprep_dir=True to filter out sessions that only have anat, but no func
+    * input_dir can be any hierarchy of type sub-01/ses-11; then set fmriprep_dir=False
     """
-    os.chdir(fmriprep_dir)
+    os.chdir(input_dir)
 
     # get subjects
     if participant_label:
@@ -38,9 +37,10 @@ def get_subject_sessions(fmriprep_dir, participant_label, raise_if_empty=True):
     subjects_sessions = list(map(get_subject_sessions_one_sub, subjects))
     subjects_sessions = list(itertools.chain.from_iterable(subjects_sessions))
 
-    # filter out sessions that only have anat, but no func:
-    subjects_sessions = list(filter(lambda s: os.path.isdir(os.path.join(fmriprep_dir, "sub-" + s[0], "ses-" + s[1],
-                                                                         "func")), subjects_sessions))
+    if fmriprep_dir:
+        # filter out sessions that only have anat, but no func:
+        subjects_sessions = list(filter(lambda s: os.path.isdir(os.path.join(input_dir, "sub-" + s[0], "ses-" + s[1],
+                                                                             "func")), subjects_sessions))
 
     print(subjects, subjects_sessions)
     if raise_if_empty:
@@ -79,19 +79,6 @@ def get_files(fmriprep_dir, subject, session):
     return confounds_file, brainmask_file, rs_file, anat_file
 
 
-def get_motion_one_subject(subject, session, fmriprep_dir):
-    # returns data frame with FD_mean, FD_median, FD_max, subject, session
-    confounds_file, brainmask_file, rs_file, anat_file = get_files(fmriprep_dir, subject, session)
-    df = pd.read_csv(confounds_file, sep="\t")
-    agg = df[['FramewiseDisplacement']].agg(["mean", "median", "max"])
-    agg.rename({"mean": "FD_mean", "median": "FD_median", "max": "FD_max"}, inplace=True)
-    agg = agg.T
-    agg["subject"] = subject
-    agg["session"] = session
-    agg.reset_index(drop=True, inplace=True)
-    return agg
-
-
 def get_motion_ts_one_subject(subject, session, fmriprep_dir):
     # returns data frame with FD time series
     confounds_file, brainmask_file, rs_file, anat_file = get_files(fmriprep_dir, subject, session)
@@ -103,38 +90,6 @@ def get_motion_ts_one_subject(subject, session, fmriprep_dir):
     frames.reset_index(inplace=True)
     frames.rename(columns={"index": "tr"}, inplace=True)
     return frames
-
-
-def collect_motion(subjects_sessions, fmriprep_dir, full_out_dir, n_cpus):
-    # aggreagate FD
-    dfs = Parallel(n_jobs=n_cpus)(
-        delayed(get_motion_one_subject)(*suse, fmriprep_dir) for suse in subjects_sessions)
-
-    df = pd.concat(dfs)
-    df = df[['subject', 'session', 'FD_mean', 'FD_median', 'FD_max']]
-    df.sort_values(by=["subject", "session"], inplace=True)
-    out_file = os.path.join(full_out_dir, "group_motion.tsv")
-    df.to_csv(out_file, sep="\t", index=False)
-    print("Writing to {}".format(out_file))
-
-    # plots
-    for m in ["FD_mean", "FD_median", "FD_max"]:
-        sns.distplot(df[m])
-        plt.savefig(os.path.join(full_out_dir, m + "_hist.pdf"))
-        plt.close()
-        sns.boxplot(y=df[m])
-        plt.savefig(os.path.join(full_out_dir, m + "_box.pdf"))
-        plt.close()
-
-    # export FD time series
-    dfs = Parallel(n_jobs=n_cpus)(
-        delayed(get_motion_ts_one_subject)(*suse, fmriprep_dir) for suse in subjects_sessions)
-    df = pd.concat(dfs)
-    df.sort_values(by=["subject", "session"], inplace=True)
-    out_file = os.path.join(full_out_dir, "group_motion_time_series.tsv")
-    df.to_csv(out_file, sep="\t", index=False)
-    print("Writing time series to {}".format(out_file))
-
 
 
 def get_36P_confounds(confounds_file):
