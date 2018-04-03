@@ -20,10 +20,9 @@ def _get_roi_info(parc):
         roi_type = "maps"
 
     elif parc == "gordon":
-        # fixme
-        gordon_dir = "/parcs/Gordon/Parcels"
-        roi_file = os.path.join(gordon_dir, "Parcels_MNI_111.nii")
-        labs_df = pd.read_excel(os.path.join(gordon_dir, "Parcels.xlsx"))
+        atlas_dir = "/parcs/Gordon/Parcels"
+        roi_file = os.path.join(atlas_dir, "Parcels_MNI_111.nii")
+        labs_df = pd.read_excel(os.path.join(atlas_dir, "Parcels.xlsx"))
         roi_names = labs_df.ParcelID.values
         roi_type = "labels"
 
@@ -39,6 +38,23 @@ def _get_roi_info(parc):
         roi_names = np.arange(1, 445).astype(int)
         roi_type = "labels"
 
+    elif parc == "schaefer200":
+        atlas_dir = "/parcs/Schaefer"
+        schaefer_cols = "roi community c1 c2 c3 c4".split()
+        roi_file = os.path.join(atlas_dir, "Schaefer2018_200Parcels_17Networks_order_FSLMNI152_1mm.nii.gz")
+        labs_df = pd.read_csv(os.path.join(atlas_dir, "Schaefer2018_200Parcels_17Networks_order.txt"), sep="\t",
+                                names=schaefer_cols)
+        roi_names = labs_df.roi
+        roi_type = "labels"
+
+    elif parc == "schaefer400":
+        atlas_dir = "/parcs/Schaefer"
+        schaefer_cols = "roi community c1 c2 c3 c4".split()
+        roi_file = os.path.join(atlas_dir, "Schaefer2018_400Parcels_17Networks_order_FSLMNI152_1mm.nii.gz")
+        labs_df = pd.read_csv(os.path.join(atlas_dir, "Schaefer2018_400Parcels_17Networks_order.txt"), sep="\t",
+                                names=schaefer_cols)
+        roi_names = labs_df.roi
+        roi_type = "labels"
     else:
         raise Exception("Parcellation not known {}".format(parc))
     return roi_file, roi_names, roi_type

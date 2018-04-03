@@ -48,7 +48,7 @@ if __name__ == "__main__":
     subjects, subjects_sessions = get_subject_sessions(args.fmriprep_dir, args.participant_label)
     print("Processing {} subjects and a total of {} sessions".format(len(subjects), len(subjects_sessions)))
 
-    parc_list = ["msdl", "gordon", "basc197", "basc444"]
+    parc_list = ["msdl", "gordon", "schaefer200", "schaefer400"]
 
     if args.analysis_level == "participant_1_sbc_pcc":
 
