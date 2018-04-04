@@ -117,3 +117,13 @@ def test_36p():
     confounds_file = os.path.join("test_data/sub-1_ses-1_task-rest_run-1_bold_confounds.tsv")
     confounds = get_36P_confounds(confounds_file)
     assert confounds.shape == (225, 36), "Shape of 36P df is wrong {}".format(confounds.shape)
+
+
+def save_feather(df, filename):
+    "saves df to feather file after resetting index"
+    if not filename.endswith(".feather"):
+        filename += ".feather"
+    df.index.name = "index"
+    df.reset_index(inplace=True)
+    df.columns = df.columns.astype(str)
+    df.to_feather(filename)

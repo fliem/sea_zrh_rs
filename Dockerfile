@@ -6,6 +6,7 @@ RUN conda install -y seaborn
 RUN conda install -y xlrd
 RUN conda install scikit-learn
 RUN pip install nilearn
+RUN pip install -U feather-format
 
 RUN apt-get update && apt-get install unzip
 RUN mkdir -p /parcs && cd /parcs && \

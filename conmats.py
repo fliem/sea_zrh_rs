@@ -1,6 +1,6 @@
 import os
 from nilearn import input_data, connectome, datasets, plotting
-from utils import get_36P_confounds, get_files
+from utils import get_36P_confounds, get_files, save_feather
 import numpy as np
 import pandas as pd
 import matplotlib
@@ -43,7 +43,7 @@ def _get_roi_info(parc):
         schaefer_cols = "roi community c1 c2 c3 c4".split()
         roi_file = os.path.join(atlas_dir, "Schaefer2018_200Parcels_17Networks_order_FSLMNI152_1mm.nii.gz")
         labs_df = pd.read_csv(os.path.join(atlas_dir, "Schaefer2018_200Parcels_17Networks_order.txt"), sep="\t",
-                                names=schaefer_cols)
+                              names=schaefer_cols)
         roi_names = labs_df.roi
         roi_type = "labels"
 
@@ -52,7 +52,7 @@ def _get_roi_info(parc):
         schaefer_cols = "roi community c1 c2 c3 c4".split()
         roi_file = os.path.join(atlas_dir, "Schaefer2018_400Parcels_17Networks_order_FSLMNI152_1mm.nii.gz")
         labs_df = pd.read_csv(os.path.join(atlas_dir, "Schaefer2018_400Parcels_17Networks_order.txt"), sep="\t",
-                                names=schaefer_cols)
+                              names=schaefer_cols)
         roi_names = labs_df.roi
         roi_type = "labels"
     else:
@@ -101,10 +101,12 @@ def conmat_one_session(subject, session, fmriprep_dir, output_dir, tr, parc):
     out_stub_short = "{}_{}".format(subject, session)
     out_stub = "sub-{}_ses-{}".format(subject, session)
     conmat_file = os.path.join(full_out_dir, "{}_parc-{}_conf-36P_conmat.tsv".format(out_stub, parc))
+    conmat_file_feather = os.path.join(full_out_dir, "{}_parc-{}_conf-36P_conmat.feather".format(out_stub, parc))
     conmat_plot_file = os.path.join(full_out_dir, "{}_parc-{}_conf-36P_conmat.png".format(out_stub, parc))
     report_file = os.path.join(full_out_dir, "{}_parc-{}_conf-36P_report.txt".format(out_stub, parc))
 
-    if not (os.path.exists(conmat_file) and os.path.exists(conmat_plot_file) and os.path.exists(report_file)):
+    if not (os.path.exists(conmat_file) and os.path.exists(conmat_file_feather) and os.path.exists(conmat_plot_file)
+            and os.path.exists(report_file)):
         print("*** Calc conmats for {} {} {} ***".format(subject, session, parc))
 
         confounds_file, brainmask_file, rs_file, anat_file = get_files(fmriprep_dir, subject, session)
@@ -120,6 +122,9 @@ def conmat_one_session(subject, session, fmriprep_dir, output_dir, tr, parc):
         plotting.plot_matrix(conmat, labels=roi_names, figure=(9, 7), vmax=1, vmin=-1, title=out_stub_short + " r")
         plt.savefig(conmat_plot_file, bbox_inches='tight')
         plt.close()
+
+        save_feather(conmat_df, conmat_file_feather)
+
     else:
         print("*** Conmats for {} {} {} already computed. Do nothing. ***".format(subject, session, parc))
 
@@ -163,5 +168,3 @@ def extract_mat(rs_file, brainmask_file, roi_file, confounds_file, roi_type, tr)
     report_str += confounds.to_string()
 
     return conmat, report_str
-
-
