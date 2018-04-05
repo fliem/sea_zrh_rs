@@ -64,6 +64,13 @@ def _get_roi_info(parc):
         roi_names = df_labels["roi_labels"].values
         roi_type = "labels"
 
+    elif parc == "yeo7":
+        atlas = datasets.fetch_atlas_yeo_2011()
+        roi_file = atlas['thick_7']
+        yeo_cols = "roi roi_labels c1 c2 c3 c4".split()
+        df_labels = pd.read_csv(atlas["colors_7"], sep=r"\s*", engine="python", names=yeo_cols, skiprows=1)
+        roi_names = df_labels["roi_labels"].values
+        roi_type = "labels"
     else:
         raise Exception("Parcellation not known {}".format(parc))
     return roi_file, roi_names, roi_type
