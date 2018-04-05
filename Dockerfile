@@ -14,7 +14,7 @@ RUN mkdir -p /parcs && cd /parcs && \
     unzip Parcels.zip -d Gordon && rm -r Parcels.zip
 
 RUN python -c "from nilearn import datasets;_=datasets.fetch_atlas_msdl()"
-RUN python -c "from nilearn import datasets;_=datasets.fetch_atlas_basc_multiscale_2015(version='sym')"
+RUN python -c "from nilearn import datasets;_=datasets.fetch_atlas_yeo_2011()"
 
 RUN mkdir -p /parcs/Schaefer
 RUN cd /parcs/Schaefer && wget https://raw.githubusercontent.com/ThomasYeoLab/CBIG/master/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal/Parcellations/MNI/Schaefer2018_400Parcels_17Networks_order.txt
