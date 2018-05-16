@@ -3,7 +3,7 @@ import os
 import numpy as np
 from nilearn import input_data, plotting
 from glob import glob
-from utils import get_files, get_36P_confounds
+from utils import get_files, get_confounds
 
 
 def sbc_one_session(subject, session, fmriprep_dir, output_dir, tr):
@@ -24,7 +24,7 @@ def sbc_one_session(subject, session, fmriprep_dir, output_dir, tr):
         hp_freq = 0.01
 
         # load confounds
-        confounds = get_36P_confounds(confounds_file)
+        confounds = get_confounds(confounds_file)
 
         # extract data from seed ROI
         seed_masker = input_data.NiftiSpheresMasker(
