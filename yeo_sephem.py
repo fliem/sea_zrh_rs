@@ -47,7 +47,7 @@ def split_yeo(out_path):
     df_labels_rh["roi"] += 100
 
     df_combined = pd.concat((df_labels_lh, df_labels_rh))
-
+    df_combined["full_roi_name"] = (df_combined.hemi + "_" + df_combined.roi_name).str.replace(" ", "_")
     # output
     os.makedirs(out_path, exist_ok=True)
     out_file = os.path.join(out_path, "yeo_2011_thick17_splithemi")
