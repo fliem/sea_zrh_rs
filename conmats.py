@@ -122,11 +122,11 @@ def conmat_one_session(subject, session, fmriprep_dir, output_dir, tr, parc):
     os.makedirs(full_out_dir, exist_ok=True)
 
     out_stub_short = "{}_{}".format(subject, session)
-    out_stub = "sub-{}_ses-{}".format(subject, session)
-    conmat_file = os.path.join(full_out_dir, "{}_parc-{}_conf-36P_conmat.tsv".format(out_stub, parc))
-    conmat_file_feather = os.path.join(full_out_dir, "{}_parc-{}_conf-36P_conmat.feather".format(out_stub, parc))
-    conmat_plot_file = os.path.join(full_out_dir, "{}_parc-{}_conf-36P_conmat.png".format(out_stub, parc))
-    report_file = os.path.join(full_out_dir, "{}_parc-{}_conf-36P_report.txt".format(out_stub, parc))
+    out_stub = "sub-{}_ses-{}_parc-{}_conf-36P".format(subject, session, parc)
+    conmat_file = os.path.join(full_out_dir, "{}_conmat.tsv".format(out_stub))
+    conmat_file_feather = os.path.join(full_out_dir, "{}_conmat.feather".format(out_stub))
+    conmat_plot_file = os.path.join(full_out_dir, "{}_conmat.png".format(out_stub))
+    report_file = os.path.join(full_out_dir, "{}_report.txt".format(out_stub))
 
     if not (os.path.exists(conmat_file) and os.path.exists(conmat_file_feather) and os.path.exists(conmat_plot_file)
             and os.path.exists(report_file)):
