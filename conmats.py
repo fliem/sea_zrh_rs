@@ -1,6 +1,6 @@
 import os
 from nilearn import input_data, connectome, datasets, plotting
-from utils import get_36P_confounds, get_files, save_feather
+from utils import get_confounds, get_files, save_feather
 import numpy as np
 import pandas as pd
 import matplotlib
@@ -68,7 +68,7 @@ def _get_roi_info(parc):
         atlas_dir = "/parcs/Yeo_splithemi"
         roi_file = os.path.join(atlas_dir, "yeo_2011_thick17_splithemi.nii.gz")
         labs_df = pd.read_csv(os.path.join(atlas_dir, "yeo_2011_thick17_splithemi.tsv"), sep="\t")
-        roi_names = labs_df.roi.values
+        roi_names = labs_df.full_roi_name.values
         roi_type = "labels"
 
     elif parc == "yeo7":
@@ -117,12 +117,13 @@ def _get_con_df(raw_mat, roi_names):
     return con_df
 
 
-def conmat_one_session(subject, session, fmriprep_dir, output_dir, tr, parc):
+def conmat_one_session(subject, session, fmriprep_dir, output_dir, tr, conf, parc):
     full_out_dir = os.path.join(output_dir, "sub-{}".format(subject), "ses-{}".format(session))
     os.makedirs(full_out_dir, exist_ok=True)
 
     out_stub_short = "{}_{}".format(subject, session)
-    out_stub = "sub-{}_ses-{}_parc-{}_conf-36P".format(subject, session, parc)
+    out_stub = "sub-{}_ses-{}_parc-{}_conf-{}".format(subject, session, parc, conf)
+
     conmat_file = os.path.join(full_out_dir, "{}_conmat.tsv".format(out_stub))
     conmat_file_feather = os.path.join(full_out_dir, "{}_conmat.feather".format(out_stub))
     conmat_plot_file = os.path.join(full_out_dir, "{}_conmat.png".format(out_stub))
@@ -130,12 +131,12 @@ def conmat_one_session(subject, session, fmriprep_dir, output_dir, tr, parc):
 
     if not (os.path.exists(conmat_file) and os.path.exists(conmat_file_feather) and os.path.exists(conmat_plot_file)
             and os.path.exists(report_file)):
-        print("*** Calc conmats for {} {} {} ***".format(subject, session, parc))
+        print("*** Calc conmats for {} {} {} {} ***".format(subject, session, parc, conf))
 
         confounds_file, brainmask_file, rs_file, anat_file = get_files(fmriprep_dir, subject, session)
         roi_file, roi_names, roi_type = _get_roi_info(parc)
 
-        conmat, report_str = extract_mat(rs_file, brainmask_file, roi_file, confounds_file, roi_type, tr)
+        conmat, report_str = extract_mat(rs_file, brainmask_file, roi_file, confounds_file, conf, roi_type, tr)
         conmat_df = _get_con_df(conmat, roi_names)
 
         conmat_df.to_csv(conmat_file, sep="\t")
@@ -149,10 +150,10 @@ def conmat_one_session(subject, session, fmriprep_dir, output_dir, tr, parc):
         save_feather(conmat_df, conmat_file_feather)
 
     else:
-        print("*** Conmats for {} {} {} already computed. Do nothing. ***".format(subject, session, parc))
+        print("*** Conmats for {} {} {} {} already computed. Do nothing. ***".format(subject, session, parc, conf))
 
 
-def extract_mat(rs_file, brainmask_file, roi_file, confounds_file, roi_type, tr):
+def extract_mat(rs_file, brainmask_file, roi_file, confounds_file, conf, roi_type, tr):
     """
     36 P
     """
@@ -171,7 +172,7 @@ def extract_mat(rs_file, brainmask_file, roi_file, confounds_file, roi_type, tr)
         raise Exception("roi type not known {}".format(roi_type))
 
     # Extract time series
-    confounds = get_36P_confounds(confounds_file)
+    confounds = get_confounds(confounds_file, kind=conf)
     time_series = masker.fit_transform(rs_file, confounds=confounds.values)
 
     con_measure = connectome.ConnectivityMeasure(kind='correlation')

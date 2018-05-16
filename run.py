@@ -48,7 +48,9 @@ if __name__ == "__main__":
     subjects, subjects_sessions = get_subject_sessions(args.fmriprep_dir, args.participant_label)
     print("Processing {} subjects and a total of {} sessions".format(len(subjects), len(subjects_sessions)))
 
-    parc_list = ["msdl", "schaefer200", "schaefer400", "yeo17", "yeo7", "yeo17split"]
+    conf_parcs = {"36P": ["msdl", "schaefer200", "schaefer400", "yeo17", "yeo7", "yeo17split"],
+                  "9P": ["yeo17split"]
+                  }
 
     if args.analysis_level == "participant_1_sbc_pcc":
 
@@ -74,10 +76,19 @@ if __name__ == "__main__":
         output_dir = os.path.join(args.output_dir, "conmats", "participant")
         os.makedirs(output_dir, exist_ok=True)
 
-        subjects_sessions_parc = list(itertools.product(subjects_sessions, parc_list))
+        subjects_sessions_conf_parc = []
+        for c, ps in conf_parcs.items():
+            subjects_sessions_conf_parc += list(itertools.product(subjects_sessions, [c], ps))
+
         _ = Parallel(n_jobs=args.n_cpus)(
-            delayed(conmat_one_session)(suse[0][0], suse[0][1], args.fmriprep_dir, output_dir, args.TR, suse[1])
-            for suse in subjects_sessions_parc)
+            delayed(conmat_one_session)(suse[0][0],
+                                        suse[0][1],
+                                        args.fmriprep_dir,
+                                        output_dir,
+                                        args.TR,
+                                        suse[1],
+                                        suse[2])
+            for suse in subjects_sessions_conf_parc)
 
     elif args.analysis_level == "group_2_collect_motion":
         output_dir = os.path.join(args.output_dir, "motion", "group")
