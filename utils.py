@@ -92,15 +92,22 @@ def get_motion_ts_one_subject(subject, session, fmriprep_dir):
     return frames
 
 
-def get_36P_confounds(confounds_file):
+def get_confounds(confounds_file, kind="36P"):
     """
-    takes a fmriprep confounds file and creates data frame with Satterthwaite's 36P confound regressors
+    takes a fmriprep confounds file and creates data frame with regressors.
+    kind == "36P" returns Satterthwaite's 36P confound regressors
+    kind == "9P" returns CSF, WM, Global signal + 6 motion parameters (used in Ng et al., 2016)
 
     Satterthwaite, T. D., Elliott, M. A., Gerraty, R. T., Ruparel, K., Loughead, J., Calkins, M. E., et al. (2013).
     An improved framework for confound regression and filtering for control of motion artifact in the preprocessing
     of resting-state functional connectivity data. NeuroImage, 64, 240–256.
     http://doi.org/10.1016/j.neuroimage.2012.08.052
+
+    Ng et al. (2016). http://doi.org/10.1016/j.neuroimage.2016.03.029
     """
+    if kind not in ["36P", "9P"]:
+        raise Exception("Confound type unknown {}".format(kind))
+
     df = pd.read_csv(confounds_file, sep="\t")
 
     p9 = df[['CSF', 'WhiteMatter', 'GlobalSignal', 'X', 'Y', 'Z', 'RotX', 'RotY', 'RotZ']]
@@ -110,14 +117,22 @@ def get_36P_confounds(confounds_file):
     p18_2 = p18 ** 2
     p18_2.columns = [c + "_2" for c in p18_2.columns]
     p36 = pd.concat((p18, p18_2), axis=1)
-    return p36
+
+    if kind == "36P":
+        return p36
+    elif kind == "9P":
+        return p9
 
 
 def test_36p():
     confounds_file = os.path.join("test_data/sub-1_ses-1_task-rest_run-1_bold_confounds.tsv")
-    confounds = get_36P_confounds(confounds_file)
+    confounds = get_confounds(confounds_file)
     assert confounds.shape == (225, 36), "Shape of 36P df is wrong {}".format(confounds.shape)
 
+def test_9p():
+    confounds_file = os.path.join("test_data/sub-1_ses-1_task-rest_run-1_bold_confounds.tsv")
+    confounds = get_confounds(confounds_file, "9P")
+    assert confounds.shape == (225, 9), "Shape of 9P df is wrong {}".format(confounds.shape)
 
 def save_feather(df, filename):
     "saves df to feather file after resetting index"
