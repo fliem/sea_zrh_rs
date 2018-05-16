@@ -64,6 +64,13 @@ def _get_roi_info(parc):
         roi_names = df_labels["roi_labels"].values
         roi_type = "labels"
 
+    elif parc == "yeo17split":
+        atlas_dir = "/parcs/Yeo_splithemi"
+        roi_file = os.path.join(atlas_dir, "yeo_2011_thick17_splithemi.nii.gz")
+        labs_df = pd.read_csv(os.path.join(atlas_dir, "yeo_2011_thick17_splithemi.tsv"), sep="\t")
+        roi_names = labs_df.roi.values
+        roi_type = "labels"
+
     elif parc == "yeo7":
         atlas = datasets.fetch_atlas_yeo_2011()
         roi_file = atlas['thick_7']

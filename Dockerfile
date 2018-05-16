@@ -26,4 +26,7 @@ RUN mkdir -p /code
 COPY *.py /code/
 RUN chmod +x /code/run.py
 
+RUN python /code/yeo_sephem.py /parcs/Yeo_splithemi
+
+
 ENTRYPOINT ["/code/run.py"]
