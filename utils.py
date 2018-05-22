@@ -105,11 +105,12 @@ def get_confounds(confounds_file, kind="36P"):
 
     Ng et al. (2016). http://doi.org/10.1016/j.neuroimage.2016.03.029
     """
-    if kind not in ["36P", "9P"]:
+    if kind not in ["36P", "9P", "6P"]:
         raise Exception("Confound type unknown {}".format(kind))
 
     df = pd.read_csv(confounds_file, sep="\t")
 
+    p6 = df[['X', 'Y', 'Z', 'RotX', 'RotY', 'RotZ']]
     p9 = df[['CSF', 'WhiteMatter', 'GlobalSignal', 'X', 'Y', 'Z', 'RotX', 'RotY', 'RotZ']]
     p9_der = p9.diff().fillna(0)
     p9_der.columns = [c + "_der" for c in p9_der.columns]
@@ -122,6 +123,9 @@ def get_confounds(confounds_file, kind="36P"):
         return p36
     elif kind == "9P":
         return p9
+    elif kind == "6P":
+        return p6
+
 
 
 def test_36p():

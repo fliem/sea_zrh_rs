@@ -49,7 +49,8 @@ if __name__ == "__main__":
     print("Processing {} subjects and a total of {} sessions".format(len(subjects), len(subjects_sessions)))
 
     conf_parcs = {"36P": ["msdl", "schaefer200", "schaefer400", "yeo17", "yeo7", "yeo17split"],
-                  "9P": ["yeo17split"]
+                  "9P": ["yeo17split"],
+                  "6P": ["yeo17split"]
                   }
 
     if args.analysis_level == "participant_1_sbc_pcc":
