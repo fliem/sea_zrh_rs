@@ -48,7 +48,7 @@ if __name__ == "__main__":
     subjects, subjects_sessions = get_subject_sessions(args.fmriprep_dir, args.participant_label)
     print("Processing {} subjects and a total of {} sessions".format(len(subjects), len(subjects_sessions)))
 
-    conf_parcs = {"36P": ["msdl", "schaefer200", "schaefer400", "yeo17", "yeo7", "yeo17split"],
+    conf_parcs = {"36P": ["msdl", "schaefer200", "schaefer400", "yeo17", "yeo7", "yeo17split", "yeo17thin"],
                   "9P": ["yeo17split"],
                   "6P": ["yeo17split"]
                   }
