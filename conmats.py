@@ -125,31 +125,34 @@ def _get_con_df(raw_mat, roi_names):
     return con_df
 
 
-def conmat_one_session(subject, session, fmriprep_dir, output_dir, tr, conf, parc):
+def conmat_one_session(subject, session, fmriprep_dir, output_dir, tr, conf, parc, scrubbing_threshold=None):
     full_out_dir = os.path.join(output_dir, "sub-{}".format(subject), "ses-{}".format(session))
     os.makedirs(full_out_dir, exist_ok=True)
 
     out_stub_short = "{}_{}".format(subject, session)
-    out_stub = "sub-{}_ses-{}_parc-{}_conf-{}".format(subject, session, parc, conf)
+    out_stub = "sub-{}_ses-{}_parc-{}_conf-{}_scrub-{}".format(subject, session, parc, conf, scrubbing_threshold)
 
     conmat_file = os.path.join(full_out_dir, "{}_conmat.tsv".format(out_stub))
     conmat_file_feather = os.path.join(full_out_dir, "{}_conmat.feather".format(out_stub))
     conmat_plot_file = os.path.join(full_out_dir, "{}_conmat.png".format(out_stub))
     report_file = os.path.join(full_out_dir, "{}_report.txt".format(out_stub))
+    outlier_stats_file = os.path.join(full_out_dir, "{}_outlier_stats.txt".format(out_stub))
 
     if not (os.path.exists(conmat_file) and os.path.exists(conmat_file_feather) and os.path.exists(conmat_plot_file)
-            and os.path.exists(report_file)):
-        print("*** Calc conmats for {} {} {} {} ***".format(subject, session, parc, conf))
+            and os.path.exists(report_file) and os.path.exists(outlier_stats_file)):
+        print("*** Calc conmats for {} {} {} {} {} ***".format(subject, session, parc, conf, scrubbing_threshold))
 
         confounds_file, brainmask_file, rs_file, anat_file = get_files(fmriprep_dir, subject, session)
         roi_file, roi_names, roi_type = _get_roi_info(parc)
 
-        conmat, report_str = extract_mat(rs_file, brainmask_file, roi_file, confounds_file, conf, roi_type, tr)
+        conmat, report_str, outlier_stats = extract_mat(rs_file, brainmask_file, roi_file, confounds_file, conf,
+                                                        roi_type, tr, scrubbing_threshold)
         conmat_df = _get_con_df(conmat, roi_names)
 
         conmat_df.to_csv(conmat_file, sep="\t")
         with open(report_file, "w") as fi:
             fi.write(report_str)
+        outlier_stats.to_csv(outlier_stats_file, sep="\t")
 
         plotting.plot_matrix(conmat, labels=roi_names, figure=(9, 7), vmax=1, vmin=-1, title=out_stub_short + " r")
         plt.savefig(conmat_plot_file, bbox_inches='tight')
@@ -158,10 +161,11 @@ def conmat_one_session(subject, session, fmriprep_dir, output_dir, tr, conf, par
         save_feather(conmat_df, conmat_file_feather)
 
     else:
-        print("*** Conmats for {} {} {} {} already computed. Do nothing. ***".format(subject, session, parc, conf))
+        print("*** Conmats for {} {} {} {} {} already computed. Do nothing. ***".format(subject, session, parc,
+                                                                                        conf, scrubbing_threshold))
 
 
-def extract_mat(rs_file, brainmask_file, roi_file, confounds_file, conf, roi_type, tr):
+def extract_mat(rs_file, brainmask_file, roi_file, confounds_file, conf, roi_type, tr, scrubbing_threshold=None):
     """
     36 P
     """
@@ -180,7 +184,7 @@ def extract_mat(rs_file, brainmask_file, roi_file, confounds_file, conf, roi_typ
         raise Exception("roi type not known {}".format(roi_type))
 
     # Extract time series
-    confounds = get_confounds(confounds_file, kind=conf)
+    confounds, outlier_stats = get_confounds(confounds_file, kind=conf, scrubbing_threshold=scrubbing_threshold)
     time_series = masker.fit_transform(rs_file, confounds=confounds.values)
 
     con_measure = connectome.ConnectivityMeasure(kind='correlation')
@@ -194,9 +198,10 @@ def extract_mat(rs_file, brainmask_file, roi_file, confounds_file, conf, roi_typ
     for k in keys:
         report_str += "{}\t{}\n".format(k, masker_pars[k])
 
+    report_str += "scrubbing \t {}".format(scrubbing_threshold)
     report_str += "\n\n"
     report_str += "confounds\t{}".format(", ".join(confounds.columns))
     report_str += "\n\n"
     report_str += confounds.to_string()
 
-    return conmat, report_str
+    return conmat, report_str, outlier_stats
