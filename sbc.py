@@ -24,7 +24,7 @@ def sbc_one_session(subject, session, fmriprep_dir, output_dir, tr):
         hp_freq = 0.01
 
         # load confounds
-        confounds = get_confounds(confounds_file)
+        confounds, outlier_stats = get_confounds(confounds_file)
 
         # extract data from seed ROI
         seed_masker = input_data.NiftiSpheresMasker(

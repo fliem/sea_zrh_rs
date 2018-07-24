@@ -48,10 +48,10 @@ if __name__ == "__main__":
     subjects, subjects_sessions = get_subject_sessions(args.fmriprep_dir, args.participant_label)
     print("Processing {} subjects and a total of {} sessions".format(len(subjects), len(subjects_sessions)))
 
-    conf_parcs = {"36P": ["msdl", "schaefer200", "schaefer400", "yeo17", "yeo7", "yeo17split", "yeo17thin"],
-                  "9P": ["yeo17split"],
-                  "6P": ["yeo17split"]
-                  }
+    conf_parcs = {"36P": ["msdl", "schaefer200", "schaefer400", "yeo17", "yeo7", "yeo17split"],
+                  "9P": ["yeo17split"]}
+
+    spikereg_thresh_list = [None, 0.5]
 
     if args.analysis_level == "participant_1_sbc_pcc":
 
@@ -79,7 +79,7 @@ if __name__ == "__main__":
 
         subjects_sessions_conf_parc = []
         for c, ps in conf_parcs.items():
-            subjects_sessions_conf_parc += list(itertools.product(subjects_sessions, [c], ps))
+            subjects_sessions_conf_parc += list(itertools.product(subjects_sessions, [c], ps, spikereg_thresh_list))
 
         _ = Parallel(n_jobs=args.n_cpus)(
             delayed(conmat_one_session)(suse[0][0],
@@ -88,7 +88,8 @@ if __name__ == "__main__":
                                         output_dir,
                                         args.TR,
                                         suse[1],
-                                        suse[2])
+                                        suse[2],
+                                        suse[3])
             for suse in subjects_sessions_conf_parc)
 
     elif args.analysis_level == "group_2_collect_motion":

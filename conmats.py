@@ -40,7 +40,7 @@ def _get_roi_info(parc):
 
     elif parc == "schaefer200":
         atlas_dir = "/parcs/Schaefer"
-        schaefer_cols = "roi community c1 c2 c3 c4".split()
+        schaefer_cols = "roi community c1 c2 c3 c4".split(" ")
         roi_file = os.path.join(atlas_dir, "Schaefer2018_200Parcels_17Networks_order_FSLMNI152_1mm.nii.gz")
         labs_df = pd.read_csv(os.path.join(atlas_dir, "Schaefer2018_200Parcels_17Networks_order.txt"), sep="\t",
                               names=schaefer_cols)
@@ -49,7 +49,7 @@ def _get_roi_info(parc):
 
     elif parc == "schaefer400":
         atlas_dir = "/parcs/Schaefer"
-        schaefer_cols = "roi community c1 c2 c3 c4".split()
+        schaefer_cols = "roi community c1 c2 c3 c4".split(" ")
         roi_file = os.path.join(atlas_dir, "Schaefer2018_400Parcels_17Networks_order_FSLMNI152_1mm.nii.gz")
         labs_df = pd.read_csv(os.path.join(atlas_dir, "Schaefer2018_400Parcels_17Networks_order.txt"), sep="\t",
                               names=schaefer_cols)
@@ -59,7 +59,7 @@ def _get_roi_info(parc):
     elif parc == "yeo17":
         atlas = datasets.fetch_atlas_yeo_2011()
         roi_file = atlas['thick_17']
-        yeo_cols = "roi roi_labels c1 c2 c3 c4".split()
+        yeo_cols = "roi roi_labels c1 c2 c3 c4".split(" ")
         df_labels = pd.read_csv(atlas["colors_17"], sep=r"\s*", engine="python", names=yeo_cols, skiprows=1)
         roi_names = df_labels["roi_labels"].values
         roi_type = "labels"
@@ -67,7 +67,7 @@ def _get_roi_info(parc):
     elif parc == "yeo17thin":
         atlas = datasets.fetch_atlas_yeo_2011()
         roi_file = atlas['thin_17']
-        yeo_cols = "roi roi_labels c1 c2 c3 c4".split()
+        yeo_cols = "roi roi_labels c1 c2 c3 c4".split(" ")
         df_labels = pd.read_csv(atlas["colors_17"], sep=r"\s*", engine="python", names=yeo_cols, skiprows=1)
         roi_names = df_labels["roi_labels"].values
         roi_type = "labels"
@@ -82,7 +82,7 @@ def _get_roi_info(parc):
     elif parc == "yeo7":
         atlas = datasets.fetch_atlas_yeo_2011()
         roi_file = atlas['thick_7']
-        yeo_cols = "roi roi_labels c1 c2 c3 c4".split()
+        yeo_cols = "roi roi_labels c1 c2 c3 c4".split(" ")
         df_labels = pd.read_csv(atlas["colors_7"], sep=r"\s*", engine="python", names=yeo_cols, skiprows=1)
         roi_names = df_labels["roi_labels"].values
         roi_type = "labels"
@@ -125,31 +125,34 @@ def _get_con_df(raw_mat, roi_names):
     return con_df
 
 
-def conmat_one_session(subject, session, fmriprep_dir, output_dir, tr, conf, parc):
+def conmat_one_session(subject, session, fmriprep_dir, output_dir, tr, conf, parc, spikereg_threshold=None):
     full_out_dir = os.path.join(output_dir, "sub-{}".format(subject), "ses-{}".format(session))
     os.makedirs(full_out_dir, exist_ok=True)
 
     out_stub_short = "{}_{}".format(subject, session)
-    out_stub = "sub-{}_ses-{}_parc-{}_conf-{}".format(subject, session, parc, conf)
+    out_stub = "sub-{}_ses-{}_parc-{}_conf-{}_spikereg-{}".format(subject, session, parc, conf, spikereg_threshold)
 
     conmat_file = os.path.join(full_out_dir, "{}_conmat.tsv".format(out_stub))
     conmat_file_feather = os.path.join(full_out_dir, "{}_conmat.feather".format(out_stub))
     conmat_plot_file = os.path.join(full_out_dir, "{}_conmat.png".format(out_stub))
     report_file = os.path.join(full_out_dir, "{}_report.txt".format(out_stub))
+    outlier_stats_file = os.path.join(full_out_dir, "{}_outlier_stats.txt".format(out_stub))
 
     if not (os.path.exists(conmat_file) and os.path.exists(conmat_file_feather) and os.path.exists(conmat_plot_file)
-            and os.path.exists(report_file)):
-        print("*** Calc conmats for {} {} {} {} ***".format(subject, session, parc, conf))
+            and os.path.exists(report_file) and os.path.exists(outlier_stats_file)):
+        print("*** Calc conmats for {} {} {} {} {} ***".format(subject, session, parc, conf, spikereg_threshold))
 
         confounds_file, brainmask_file, rs_file, anat_file = get_files(fmriprep_dir, subject, session)
         roi_file, roi_names, roi_type = _get_roi_info(parc)
 
-        conmat, report_str = extract_mat(rs_file, brainmask_file, roi_file, confounds_file, conf, roi_type, tr)
+        conmat, report_str, outlier_stats = extract_mat(rs_file, brainmask_file, roi_file, confounds_file, conf,
+                                                        roi_type, tr, spikereg_threshold)
         conmat_df = _get_con_df(conmat, roi_names)
 
         conmat_df.to_csv(conmat_file, sep="\t")
         with open(report_file, "w") as fi:
             fi.write(report_str)
+        outlier_stats.to_csv(outlier_stats_file, sep="\t")
 
         plotting.plot_matrix(conmat, labels=roi_names, figure=(9, 7), vmax=1, vmin=-1, title=out_stub_short + " r")
         plt.savefig(conmat_plot_file, bbox_inches='tight')
@@ -158,10 +161,11 @@ def conmat_one_session(subject, session, fmriprep_dir, output_dir, tr, conf, par
         save_feather(conmat_df, conmat_file_feather)
 
     else:
-        print("*** Conmats for {} {} {} {} already computed. Do nothing. ***".format(subject, session, parc, conf))
+        print("*** Conmats for {} {} {} {} {} already computed. Do nothing. ***".format(subject, session, parc,
+                                                                                        conf, spikereg_threshold))
 
 
-def extract_mat(rs_file, brainmask_file, roi_file, confounds_file, conf, roi_type, tr):
+def extract_mat(rs_file, brainmask_file, roi_file, confounds_file, conf, roi_type, tr, spikereg_threshold=None):
     """
     36 P
     """
@@ -180,7 +184,7 @@ def extract_mat(rs_file, brainmask_file, roi_file, confounds_file, conf, roi_typ
         raise Exception("roi type not known {}".format(roi_type))
 
     # Extract time series
-    confounds = get_confounds(confounds_file, kind=conf)
+    confounds, outlier_stats = get_confounds(confounds_file, kind=conf, spikereg_threshold=spikereg_threshold)
     time_series = masker.fit_transform(rs_file, confounds=confounds.values)
 
     con_measure = connectome.ConnectivityMeasure(kind='correlation')
@@ -194,9 +198,10 @@ def extract_mat(rs_file, brainmask_file, roi_file, confounds_file, conf, roi_typ
     for k in keys:
         report_str += "{}\t{}\n".format(k, masker_pars[k])
 
+    report_str += "spike regression \t {}".format(spikereg_threshold)
     report_str += "\n\n"
     report_str += "confounds\t{}".format(", ".join(confounds.columns))
     report_str += "\n\n"
     report_str += confounds.to_string()
 
-    return conmat, report_str
+    return conmat, report_str, outlier_stats
