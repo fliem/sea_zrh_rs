@@ -50,8 +50,8 @@ if __name__ == "__main__":
 
     conf_parcs = {"36P": ["msdl", "schaefer200", "schaefer400", "yeo17", "yeo7", "yeo17split"],
                   "9P": ["yeo17split"]}
-    #fixme
-    scrubbing_thresh_list = [None, 0.25, 0.5]
+
+    spikereg_thresh_list = [None, 0.5]
 
     if args.analysis_level == "participant_1_sbc_pcc":
 
@@ -79,7 +79,7 @@ if __name__ == "__main__":
 
         subjects_sessions_conf_parc = []
         for c, ps in conf_parcs.items():
-            subjects_sessions_conf_parc += list(itertools.product(subjects_sessions, [c], ps, scrubbing_thresh_list))
+            subjects_sessions_conf_parc += list(itertools.product(subjects_sessions, [c], ps, spikereg_thresh_list))
 
         _ = Parallel(n_jobs=args.n_cpus)(
             delayed(conmat_one_session)(suse[0][0],
