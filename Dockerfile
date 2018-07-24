@@ -9,9 +9,9 @@ RUN pip install nilearn
 RUN pip install -U feather-format
 
 RUN apt-get update && apt-get install unzip
-RUN mkdir -p /parcs && cd /parcs && \
-    wget http://www.nil.wustl.edu/labs/petersen/Resources_files/Parcels.zip && \
-    unzip Parcels.zip -d Gordon && rm -r Parcels.zip
+#RUN mkdir -p /parcs && cd /parcs && \
+#    wget http://www.nil.wustl.edu/labs/petersen/Resources_files/Parcels.zip && \
+#    unzip Parcels.zip -d Gordon && rm -r Parcels.zip
 
 RUN python -c "from nilearn import datasets;_=datasets.fetch_atlas_msdl()"
 RUN python -c "from nilearn import datasets;_=datasets.fetch_atlas_yeo_2011()"
