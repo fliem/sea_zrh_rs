@@ -40,7 +40,7 @@ def _get_roi_info(parc):
 
     elif parc == "schaefer200":
         atlas_dir = "/parcs/Schaefer"
-        schaefer_cols = "roi community c1 c2 c3 c4".split()
+        schaefer_cols = "roi community c1 c2 c3 c4".split(" ")
         roi_file = os.path.join(atlas_dir, "Schaefer2018_200Parcels_17Networks_order_FSLMNI152_1mm.nii.gz")
         labs_df = pd.read_csv(os.path.join(atlas_dir, "Schaefer2018_200Parcels_17Networks_order.txt"), sep="\t",
                               names=schaefer_cols)
@@ -49,7 +49,7 @@ def _get_roi_info(parc):
 
     elif parc == "schaefer400":
         atlas_dir = "/parcs/Schaefer"
-        schaefer_cols = "roi community c1 c2 c3 c4".split()
+        schaefer_cols = "roi community c1 c2 c3 c4".split(" ")
         roi_file = os.path.join(atlas_dir, "Schaefer2018_400Parcels_17Networks_order_FSLMNI152_1mm.nii.gz")
         labs_df = pd.read_csv(os.path.join(atlas_dir, "Schaefer2018_400Parcels_17Networks_order.txt"), sep="\t",
                               names=schaefer_cols)
@@ -59,7 +59,7 @@ def _get_roi_info(parc):
     elif parc == "yeo17":
         atlas = datasets.fetch_atlas_yeo_2011()
         roi_file = atlas['thick_17']
-        yeo_cols = "roi roi_labels c1 c2 c3 c4".split()
+        yeo_cols = "roi roi_labels c1 c2 c3 c4".split(" ")
         df_labels = pd.read_csv(atlas["colors_17"], sep=r"\s*", engine="python", names=yeo_cols, skiprows=1)
         roi_names = df_labels["roi_labels"].values
         roi_type = "labels"
@@ -67,7 +67,7 @@ def _get_roi_info(parc):
     elif parc == "yeo17thin":
         atlas = datasets.fetch_atlas_yeo_2011()
         roi_file = atlas['thin_17']
-        yeo_cols = "roi roi_labels c1 c2 c3 c4".split()
+        yeo_cols = "roi roi_labels c1 c2 c3 c4".split(" ")
         df_labels = pd.read_csv(atlas["colors_17"], sep=r"\s*", engine="python", names=yeo_cols, skiprows=1)
         roi_names = df_labels["roi_labels"].values
         roi_type = "labels"
@@ -82,7 +82,7 @@ def _get_roi_info(parc):
     elif parc == "yeo7":
         atlas = datasets.fetch_atlas_yeo_2011()
         roi_file = atlas['thick_7']
-        yeo_cols = "roi roi_labels c1 c2 c3 c4".split()
+        yeo_cols = "roi roi_labels c1 c2 c3 c4".split(" ")
         df_labels = pd.read_csv(atlas["colors_7"], sep=r"\s*", engine="python", names=yeo_cols, skiprows=1)
         roi_names = df_labels["roi_labels"].values
         roi_type = "labels"
