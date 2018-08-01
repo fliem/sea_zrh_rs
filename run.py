@@ -15,13 +15,13 @@ if __name__ == "__main__":
     parser.add_argument('output_dir', help='The directory where the output files will be written to. '
                                            'Can be the same base dir for all analysis levels, as subdirectories are '
                                            'created')
-    parser.add_argument('analysis_level', help='''Level of the analysis that will be performed. 
+    parser.add_argument('analysis_level', help='''Level of the analysis that will be performed.
                                                *"participant_1_sbc_pcc": produces maps with seedbased correlation
                                                *"group_1_sbc_pcc": mean sbc maps
-                                               *"participant_2_conmats": connectivity matrix extraction on the subject 
+                                               *"participant_2_conmats": connectivity matrix extraction on the subject
                                                level
-                                               *"group_2_collect_motion": motion ts. 
-                                               Info from all participants are collected into one file 
+                                               *"group_2_collect_motion": motion ts.
+                                               Info from all participants are collected into one file
                                                 '''
                         , choices=['participant_1_sbc_pcc',
                                    'group_1_sbc_pcc',
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     conf_parcs = {"36P": ["msdl", "schaefer200", "schaefer400", "yeo17", "yeo7", "yeo17split"],
                   "9P": ["yeo17split"]}
 
-    spikereg_thresh_list = [None, 0.5]
+    spikereg_thresh_list = [None, 0.5, 1.0]
 
     if args.analysis_level == "participant_1_sbc_pcc":
 
